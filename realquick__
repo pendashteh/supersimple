@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+__puton__ () {
+  __python='python3'
+  __root=$(pwd)
+  __site='site'
+  __templates='pages'
+}
+
+serve__ () {
+  local port=${1}
+  cd $__root/$__site
+  $__python -m http.server $port
+}
+
+build__ () {
+  $__python $__root/supersimple.py --templates=$__templates --site=$__site
+}
+
+. undies3
+
+
