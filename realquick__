@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+__puton__ () {
+  __datadir=$(pwd)
+}
+
+serve__ () {
+  local port=${1}
+  cd $__datadir/site
+  python3 -m http.server $port
+}
+
+build__ () {
+  python3 ./supersimple.py
+}
+
+. undies3
+
+
