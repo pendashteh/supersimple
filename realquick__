@@ -2,9 +2,12 @@
 
 __puton__ () {
   __python='python3'
+  __pip='pip3'
   __root=$(pwd)
   __site='site'
-  __templates='pages'
+  __templates='templates'
+  mkdir -p $__root/$__site
+  $__pip install -r $__root/requirements.txt
 }
 
 serve__ () {
