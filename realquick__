@@ -6,6 +6,9 @@ __puton__ () {
   __root=$(pwd)
   __site='site'
   __templates='templates'
+}
+
+install__ () {
   mkdir -p $__root/$__site
   $__pip install -r $__root/requirements.txt
 }
