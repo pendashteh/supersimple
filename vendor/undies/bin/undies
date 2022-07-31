@@ -1,0 +1,283 @@
+#!/usr/bin/env bash
+#
+#
+# Usage:
+# 1: call as argument for undies
+# $ /path/to/undies -- /path/to/script.undies
+#
+# 2: source inside the script
+# $ /path/to/script.undies
+# $ tail /path/to/script.undies -n1
+# > . undies
+#
+__=${__:-__}
+
+__API__=3
+
+_err_fn_na=101 ;: 'function does not exists'
+
+__dryrun__=${__dryrun__-}
+
+__confirm__=${__confirm__-1}
+
+__silent__=${__silent__-}
+
+##
+#
+# parent__ () {
+#   : 'put on'
+#   child__ () {
+#     : 'childish stuff'
+#   }
+#   __sub parent "$@"
+#   : 'take off'
+# }
+# parent__subcommand () {
+#   : '__app__ parent subcommand'
+# }
+#
+__parent__=${__parent__:-''}
+
+##
+# If set to a non-empty value, will take the first argument as $__id__ and the 2nd as task
+#
+# + __id__='--'
+# $ app [id] [task]
+#
+__id__=${__id__:-''}
+
+function __help {
+  help_var=$(j __ $__parent__ ${1} help)
+  t "${!help_var}"
+}
+
+function j {
+  echo ${@:2} | sed "s|\s|$1|g"
+}
+
+function t {
+  echo $@
+}
+
+function __app {
+  : 'retrieves the app name, ideally the executed command.'
+  basename $__src__
+}
+
+function __exec {
+  : '> __exec [bash commands]'
+  : '; prompts the commands for the user and executes them'
+  if test -z ${__silent__}; then
+    echo "> $@"
+  else
+    __confirm__=
+  fi
+  test ! -z ${__confirm__} && {
+    read -n 1 -p 'Are you sure? Y|n ' __confirm__
+    echo
+  }
+  case $__confirm__ in n|N) return 1;; esac
+  test -n "${__dryrun__}" && echo '# '"$@" || "$@"
+}
+
+function __sub {
+  __parent__=$__task__
+  __run $@
+}
+
+function __run {
+  : 'Usage: > __run [task] [args..]'
+  __task__=$1
+  __fn_prefix=''
+  shift
+  __process
+  local func=${__fn_prefix}${__task__}__
+  __exists ${func} || return
+  __puton__ "$@" && ${func} "$@" && __takeoff__ "$@"
+}
+
+function __process {
+  if [ -z $__task__ ]; then
+    __fn_prefix=''
+    __task__='__main'
+  elif [ ! -z $__parent__ ]; then
+    __fn_prefix=${__parent__}__
+  fi
+}
+
+function __exists {
+  : 'Usage: > __exists $fname # Returns false if $fname is not a function.'
+  typeset -F $1 >/dev/null || __return $_err_fn_na $1
+}
+
+function __return {
+  __return_info=$2
+  return $1
+}
+
+function __fnlist {
+  typeset -F
+
+  # ksh
+  # typeset 
+}
+
+function __tasks {
+  test -z $__parent__ || prefix=${__parent__}__
+  typeset -F | cut -d' ' -f3- | grep ^${prefix}[^_][^_]*__$ | sort | sed 's|__| |g' | sed "s|$__parent__\s||g"
+}
+
+function __params {
+  declare -p | grep -E '[[:space:]]__[^__]+=.*$' | awk '{printf "%s\n", $3}'
+}
+
+function __param {
+  local varname=${FUNCNAME[1]}
+  shift
+  __exists __isset ||
+  function __isset {
+    test ! -z "${!varname}"
+  }
+  __exists __get ||
+  function __get {
+    echo ${!varname}
+  }
+  __exists __set ||
+  function __set {
+    eval "$varname=$1"
+  }
+  __exists __default ||
+  function __default {
+    echo
+  }
+  test ! -z "$1" && __set $1 || __isset && __get || __set $(__default)
+}
+
+__main__help=${__main__help:-''}
+__exists __main__ ||
+function __main__ {
+  : 'display help if __main__ is not defined.'
+  help__ "$@"
+}
+
+help__help=${help__help:-'Usage: __app__ help [task]'}
+__exists help__ ||
+function help__ {
+  printf -- 'undies API version %s\n\n' $__API__
+  if [ -n "$1" ] && __exists ${1}__; then
+    local task=$1
+    __help $task | sed 's|@|\n@|g'
+    echo
+    declare -f ${task}__
+    return
+  fi
+  [[ -n $__main__help ]] && t "$__main__help" && echo
+  if [ ! -z $__id__ ]; then
+    echo 'Usage:'
+    printf ' %s %s %s [task]\n\n' $(basename $__app__) ${__id__:-'[id]'} ${__parent__}
+  fi
+  echo 'Parameters:'
+  __params | awk 'BEGIN {FS="="}; {gsub(/_/, "-", $1); printf " %s %s\n", $1, $2}'
+  echo
+  echo 'Available tasks:'
+  for task in $(__tasks); do
+    printf ' - %-10s# %s\n' $task "$(__help $task)"
+  done
+  printf -- '\n'
+  printf -- 'Usage:\n'
+  printf -- ' $ %s --param value [task]\n' $(__app)
+}
+
+__puton__help='Return false to stop the application.'
+__exists __puton__ ||
+function __puton__ {
+  : ${__app__} help ${FUNCNAME::-2}
+}
+
+__takeoff__help='Called if the task callback returns success.'
+__exists __takeoff__ ||
+function __takeoff__ {
+  : ${__app__} help ${FUNCNAME::-2}
+}
+
+__fallbck__help='Called if the task is not found or the last command returns non-zero.'
+__exists __fallback__ ||
+function __fallback__ {
+  case $? in
+    $_err_fn_na)
+      echo >&2 "task $__return_info wasn't found."
+      help__
+      ;;
+    *)
+      >&2 __help $__task__
+  esac
+}
+
+__autocomplete () {
+  local name=$1
+  complete -C "$name --tasks" $name
+  #__exec complete -F __compreply $1
+}
+
+function __ {
+  __app__=${__app__:-$0}
+  __src__=$0
+  : '$ undies -- /path/to/undies'
+  if [ "$1" = "--" ] && [ -e "$2" ]; then
+    shift
+    __src__=$(dirname $1)/$(basename $1)
+    __=! source $__src__
+    __app__="$__app__ -- $__src__"
+    shift
+  fi
+  : '$ source undies --ac script__|/path/to/script__'
+  if [ "$1" = "--ac" ]; then
+    shift
+    __autocomplete $@
+    return
+  fi
+  if [ "$1" = "--tasks" ]; then
+    __tasks
+    return
+  fi
+  if [ ! -z $__id__ ]; then
+    __id__=$1
+    shift
+  fi
+  if [ "$1" = "--dryrun" ]; then
+    __dryrun__=1
+    shift
+  fi
+  if [ "$1" = "--silent" ]; then
+    __confirm__=
+    shift
+  fi
+  while true; do
+    # $ ./app --silent-- off task
+    # : __silent__=
+    # $ ./app --socket life run
+    # : socket__=life
+    [[ ! $1 = *--* ]] && break
+    local _var=${1//-/_}
+    shift
+    local _val
+    case $1 in
+      on|true)
+	_val=1
+	;;
+      off|false)
+	_val=
+	;;
+      *)
+	_val=$1
+    esac
+    shift
+    read $_var <<< $_val
+    export $_var
+  done
+  __run "$@" || __fallback__ "$@" || >&2 echo 'failed to __run '$@
+}
+
+[[ "$__" = __ ]] || return
+
+__ "$@"

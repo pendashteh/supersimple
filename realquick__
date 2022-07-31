@@ -23,6 +23,5 @@ build__ () {
   $__python $__root/supersimple.py --templates=$__templates --site=$__site
 }
 
-. undies3
-
+source $(dirname $(realpath $BASH_SOURCE))/vendor/autoload.sh
 
