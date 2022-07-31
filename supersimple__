@@ -10,7 +10,7 @@ __puton__ () {
 
 install__ () {
   mkdir -p $__root/$__site
-  $__pip install -r $__root/requirements.txt
+  $__pip install -r $__root/lib/requirements.txt
 }
 
 serve__ () {
@@ -20,7 +20,7 @@ serve__ () {
 }
 
 build__ () {
-  $__python $__root/supersimple.py --templates=$__templates --site=$__site
+  $__python $__root/lib/supersimple.py --templates=$__templates --site=$__site
 }
 
 source $(dirname $(realpath $BASH_SOURCE))/vendor/autoload.sh
