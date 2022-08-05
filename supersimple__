@@ -14,6 +14,11 @@ install__ () {
   $__pip install -r $__core/lib/requirements.txt
 }
 
+create__help='@does initiate a project in current folder.'
+create__ () {
+  rsync -av $__core/$__templates/ $__root/$__templates
+}
+
 serve__ () {
   local port=${1}
   cd $__root/$__site
