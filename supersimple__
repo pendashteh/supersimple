@@ -6,11 +6,12 @@ __puton__ () {
   __root=$(pwd)
   __site='site'
   __templates='templates'
+  __core=$(dirname $(realpath $BASH_SOURCE))
 }
 
 install__ () {
-  mkdir -p $__root/$__site
-  $__pip install -r $__root/lib/requirements.txt
+  mkdir -p $__core/$__site
+  $__pip install -r $__core/lib/requirements.txt
 }
 
 serve__ () {
@@ -20,7 +21,7 @@ serve__ () {
 }
 
 build__ () {
-  $__python $__root/lib/supersimple.py --templates=$__templates --site=$__site
+  $__python $__core/lib/supersimple.py --templates=$__templates --site=$__site
 }
 
 source $(dirname $(realpath $BASH_SOURCE))/vendor/autoload.sh
