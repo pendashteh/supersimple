@@ -14,8 +14,13 @@ install__ () {
   $__pip install -r $__core/lib/requirements.txt
 }
 
-create__help='@does initiate a project in current folder.'
+create__help='@arg project name @does initiate a project in current folder.'
 create__ () {
+  local project_name=$1
+  test -z $project_name && read -p'Project name? ' project_name
+  test -d $__root/$project_name && echo 'Project already exists.' && return
+  __root=$__root/$project_name
+  __exec mkdir -p $__root
   rsync -av $__core/$__templates/ $__root/$__templates
 }
 
