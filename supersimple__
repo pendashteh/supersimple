@@ -22,6 +22,7 @@ create__ () {
   __root=$__root/$project_name
   __exec mkdir -p $__root
   rsync -av $__core/$__templates/ $__root/$__templates
+  rsync -av $__core/.gitignore $__root/
 }
 
 serve__ () {
