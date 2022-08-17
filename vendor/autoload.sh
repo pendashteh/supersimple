@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-for project in $(ls $(dirname $BASH_SOURCE)); do
-  if [ -f $project/$project ]; then
-    source $project/bin/$project
+
+vendor=$(dirname $BASH_SOURCE)
+for project in $(ls $vendor); do
+  bin=$vendor/$project/bin/$project
+  if [ -f $bin ]; then
+    source $bin $@
   fi
 done
