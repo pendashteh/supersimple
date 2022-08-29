@@ -32,8 +32,8 @@ serve__ () {
 }
 
 build__ () {
-  $__python $__core/lib/supersimple.py --templates=$__templates --site=$__site
+  $__python $__core/lib/supersimple.py --templates=$__root/$__templates --site=$__site
+  rsync -a $__root/$__templates/assets $__root/$__site
 }
 
 source $(dirname $(realpath $BASH_SOURCE))/vendor/autoload.sh
-
