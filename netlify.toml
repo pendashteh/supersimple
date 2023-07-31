@@ -1,0 +1,8 @@
+# See https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  base = ""
+  publish = "./site"
+  command = "./supersimple__ install && ./supersimple__ build"
+
+
