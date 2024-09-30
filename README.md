@@ -25,3 +25,7 @@ Available tasks:
 Usage:
  $ supersimple --param value [task]
 ```
+
+## Demo
+
+[Supersimple website](https://supersimple.website/) is built using supersimple.
